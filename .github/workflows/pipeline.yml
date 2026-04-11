@@ -40,20 +40,26 @@ jobs:
         run: python "Tourism Project/Model_building/prep.py"
 
   model-training:
-    needs: data-prep
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
-      - name: Install Dependencies
-        run: pip install -r "Tourism Project/requirements.txt"
-      - name: Model Building
-        env:
-          HF_TOKEN: ${{ secrets.HF_TOURISM_PACKAGE_PREDICTION_TOKEN }}
-        run: python "Tourism Project/Model_building/train.py"
+  needs: data-prep
+  runs-on: ubuntu-latest
+  steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+    - name: Install Dependencies
+      run: pip install -r "Tourism Project/requirements.txt"
+    - name: Model Building
+      env:
+        HF_TOURISM_PACKAGE_PREDICTION_TOKEN: ${{ secrets.HF_TOURISM_PACKAGE_PREDICTION_TOKEN }}
+      run: python "Tourism Project/Model_building/train.py"
+    - name: Upload MLflow artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: mlflow-runs
+        path: mlruns
+
 
   deploy-hosting:
     runs-on: ubuntu-latest
