@@ -1,0 +1,159 @@
+# for data manipulation
+import pandas as pd
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from sklearn.compose import make_column_transformer
+from sklearn.pipeline import make_pipeline
+# for model training, tuning, and evaluation
+import xgboost as xgb
+
+from sklearn.model_selection import RandomizedSearchCV, GridSearchCV
+from sklearn import metrics
+from sklearn.metrics import accuracy_score, classification_report, recall_score
+# for model serialization
+import joblib
+# for creating a folder
+import os
+# for hugging face space authentication to upload files
+from huggingface_hub import login, HfApi, create_repo
+from huggingface_hub.utils import RepositoryNotFoundError, HfHubHTTPError
+import mlflow
+
+mlflow.set_tracking_uri("http://localhost:5000")
+mlflow.set_experiment("mlops-training-experiment")
+
+api = HfApi(token=os.getenv("HF_TOURISM_PACKAGE_PREDICTION_TOKEN"))
+
+
+Xtrain_path = "hf://datasets/Thaseen75/Tourism_Package_Prediction/Xtrain.csv"
+Xtest_path = "hf://datasets/Thaseen75/Tourism_Package_Prediction/Xtest.csv"
+ytrain_path = "hf://datasets/Thaseen75/Tourism_Package_Prediction/ytrain.csv"
+ytest_path = "hf://datasets/Thaseen75/Tourism_Package_Prediction/ytest.csv"
+
+Xtrain = pd.read_csv(Xtrain_path)
+Xtest = pd.read_csv(Xtest_path)
+ytrain = pd.read_csv(ytrain_path)
+ytest = pd.read_csv(ytest_path)
+
+
+# One-hot encode 'Type' and scale numeric features
+numeric_features = [
+       'Age', 'CityTier',
+       'DurationOfPitch', 'NumberOfPersonVisiting', 'NumberOfFollowups',
+       'PreferredPropertyStar', 'NumberOfTrips', 'Passport',
+       'PitchSatisfactionScore', 'OwnCar', 'NumberOfChildrenVisiting',
+       'MonthlyIncome'
+]
+categorical_features = ['TypeofContact', 'Occupation', 'Gender', 'ProductPitched',
+       'MaritalStatus', 'Designation']
+
+
+# Set the clas weight to handle class imbalance
+class_weight = ytrain.value_counts()[0] / ytrain.value_counts()[1]
+class_weight
+
+# Define the preprocessing steps
+preprocessor = make_column_transformer(
+    (StandardScaler(), numeric_features),
+    (OneHotEncoder(handle_unknown='ignore'), categorical_features)
+)
+
+# Define base XGBoost model
+xgb_model = xgb.XGBClassifier(scale_pos_weight=class_weight, random_state=42)
+
+# Define hyperparameter grid
+parameters = {
+    "xgbclassifier__n_estimators": [300, 500, 800],
+    "xgbclassifier__learning_rate": [0.005, 0.01, 0.05],
+    "xgbclassifier__max_depth": [5, 7, 10],
+    "xgbclassifier__min_child_weight": [1],
+    "xgbclassifier__subsample": [0.5, 0.7, 0.9],
+    "xgbclassifier__colsample_bytree": [0.5, 0.7, 0.9],
+    "xgbclassifier__gamma": [0],
+    "xgbclassifier__scale_pos_weight": [5, 10, 20, 50]
+}
+
+model_pipeline = make_pipeline(preprocessor, xgb_model)
+scorer = metrics.make_scorer(metrics.accuracy_score)
+
+with mlflow.start_run():
+    # Hyperparameter tuning
+    randomized_cv = RandomizedSearchCV(
+    estimator=model_pipeline,
+    param_distributions=parameters,
+    n_iter=50,          # number of random combinations to try
+    scoring=scorer,
+    cv=5,               # 5-fold cross-validation
+    n_jobs=-1,          # use all cores
+    random_state=1
+)
+    randomized_cv.fit(X_train, y_train)
+
+    # Log all parameter combinations and their mean test scores
+    results = randomized_cv.cv_results_
+    for i in range(len(results['params'])):
+        param_set = results['params'][i]
+        mean_score = results['mean_test_score'][i]
+        std_score = results['std_test_score'][i]
+
+        # Log each combination as a separate MLflow run
+        with mlflow.start_run(nested=True):
+            mlflow.log_params(param_set)
+            mlflow.log_metric("mean_test_score", mean_score)
+            mlflow.log_metric("std_test_score", std_score)
+
+    # Log best parameters separately in main run
+    mlflow.log_params(randomized_cv.best_params_)
+
+    # Store and evaluate the best model
+    best_model = randomized_cv.best_estimator_
+
+    classification_threshold = 0.45
+
+    y_pred_train_proba = best_model.predict_proba(X_train)[:, 1]
+    y_pred_train = (y_pred_train_proba >= classification_threshold).astype(int)
+
+    y_pred_test_proba = best_model.predict_proba(X_test)[:, 1]
+    y_pred_test = (y_pred_test_proba >= classification_threshold).astype(int)
+
+    train_report = classification_report(y_train, y_pred_train, output_dict=True)
+    test_report = classification_report(y_test, y_pred_test, output_dict=True)
+
+    mlflow.log_metrics({
+        "train_accuracy": train_report['accuracy'],
+        "train_precision": train_report['1']['precision'],
+        "train_recall": train_report['1']['recall'],
+        "train_f1-score": train_report['1']['f1-score'],
+        "test_accuracy": test_report['accuracy'],
+        "test_precision": test_report['1']['precision'],
+        "test_recall": test_report['1']['recall'],
+        "test_f1-score": test_report['1']['f1-score']
+    })
+
+    # Save the model locally
+    model_path = "Tourism_Package_Prediction_Model_v1.joblib"
+    joblib.dump(best_model, model_path)
+
+    # Log the model artifact
+    mlflow.log_artifact(model_path, artifact_path="model")
+    print(f"Model saved as artifact at: {model_path}")
+
+    # Upload to Hugging Face
+    repo_id = "Thaseen75/Tourism_Package_Prediction"
+    repo_type = "model"
+
+    # Step 1: Check if the space exists
+    try:
+        api.repo_info(repo_id=repo_id, repo_type=repo_type)
+        print(f"Space '{repo_id}' already exists. Using it.")
+    except RepositoryNotFoundError:
+        print(f"Space '{repo_id}' not found. Creating new space...")
+        create_repo(repo_id=repo_id, repo_type=repo_type, private=False)
+        print(f"Space '{repo_id}' created.")
+
+    # create_repo("churn-model", repo_type="model", private=False)
+    api.upload_file(
+        path_or_fileobj="Tourism_Package_Prediction_Model_v1.joblib",
+        path_in_repo="Tourism_Package_Prediction_Model_v1.joblib",
+        repo_id=repo_id,
+        repo_type=repo_type,
+    )
