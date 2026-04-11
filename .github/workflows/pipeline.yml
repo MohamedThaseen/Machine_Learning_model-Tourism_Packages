@@ -4,11 +4,11 @@ on:
   push:
     branches:
       - main  # Automatically triggers on push to the main branch
+
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
   
 jobs:
-
   register-dataset:
     runs-on: ubuntu-latest
     steps:
@@ -23,6 +23,7 @@ jobs:
         env:
           HF_TOKEN: ${{ secrets.HF_TOURISM_PACKAGE_PREDICTION_TOKEN }}
         run: python "Tourism Project/Model_building/data_register.py"
+
   data-prep:
     needs: register-dataset
     runs-on: ubuntu-latest
@@ -50,10 +51,6 @@ jobs:
           python-version: '3.10'
       - name: Install Dependencies
         run: pip install -r "Tourism Project/requirements.txt"
-
-      - name: Start MLflow local server
-        run: mlflow server --host 127.0.0.1 --port 5000 & sleep 5 
-        # The '&' runs it in background, 'sleep' ensures it's up before training starts
 
       - name: Model Building
         env:
