@@ -18,7 +18,7 @@ from huggingface_hub import login, HfApi, create_repo
 from huggingface_hub.utils import RepositoryNotFoundError, HfHubHTTPError
 import mlflow
 
-mlflow.set_tracking_uri("http://localhost:5000")
+mlflow.set_tracking_uri("file:./mlruns")
 mlflow.set_experiment("mlops-training-experiment")
 
 api = HfApi(token=os.getenv("HF_TOURISM_PACKAGE_PREDICTION_TOKEN"))
@@ -86,7 +86,7 @@ with mlflow.start_run():
     n_jobs=-1,          # use all cores
     random_state=1
 )
-    randomized_cv.fit(X_train, y_train)
+    randomized_cv.fit(Xtrain, ytrain)
 
     # Log all parameter combinations and their mean test scores
     results = randomized_cv.cv_results_
@@ -109,14 +109,14 @@ with mlflow.start_run():
 
     classification_threshold = 0.45
 
-    y_pred_train_proba = best_model.predict_proba(X_train)[:, 1]
+    y_pred_train_proba = best_model.predict_proba(Xtrain)[:, 1]
     y_pred_train = (y_pred_train_proba >= classification_threshold).astype(int)
 
-    y_pred_test_proba = best_model.predict_proba(X_test)[:, 1]
+    y_pred_test_proba = best_model.predict_proba(Xtest)[:, 1]
     y_pred_test = (y_pred_test_proba >= classification_threshold).astype(int)
 
-    train_report = classification_report(y_train, y_pred_train, output_dict=True)
-    test_report = classification_report(y_test, y_pred_test, output_dict=True)
+    train_report = classification_report(ytrain, y_pred_train, output_dict=True)
+    test_report = classification_report(ytest, y_pred_test, output_dict=True)
 
     mlflow.log_metrics({
         "train_accuracy": train_report['accuracy'],
