@@ -48,7 +48,8 @@ categorical_features = ['TypeofContact', 'Occupation', 'Gender', 'ProductPitched
 
 
 # Set the clas weight to handle class imbalance
-class_weight = ytrain.value_counts()[0] / ytrain.value_counts()[1]
+class_counts = ytrain.iloc[:,0].value_counts()
+class_weight = ytrain.value_counts()[0] / class_counts[1]
 class_weight
 
 # Define the preprocessing steps
