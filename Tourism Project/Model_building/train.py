@@ -144,12 +144,17 @@ with mlflow.start_run():
 
     # Step 1: Check if the space exists
     try:
-        api.repo_info(repo_id=repo_id, repo_type=repo_type)
-        print(f"Space '{repo_id}' already exists. Using it.")
-    except RepositoryNotFoundError:
-        print(f"Space '{repo_id}' not found. Creating new space...")
-        create_repo(repo_id=repo_id, repo_type=repo_type, private=False)
-        print(f"Space '{repo_id}' created.")
+     api.repo_info(repo_id=repo_id, repo_type=repo_type)
+     print(f"Repo '{repo_id}' already exists.")
+    except Exception:
+     print(f"Repo '{repo_id}' not found. Creating it...")
+    # PASS THE TOKEN EXPLICITLY HERE
+     create_repo(
+        repo_id=repo_id, 
+        repo_type=repo_type, 
+        token = api,    # <--- This ensures the token is used for creation
+        private=False
+    )
 
     # create_repo("churn-model", repo_type="model", private=False)
     api.upload_file(
