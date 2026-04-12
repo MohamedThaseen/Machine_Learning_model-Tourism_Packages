@@ -6,7 +6,12 @@ import numpy as np
 
 @st.cache_resource
 def load_model():
-    return joblib.load("Tourism_Package_Prediction_Model_v1.joblib")
+    # Download the model from your MODEL repo
+    model_path = hf_hub_download(
+        repo_id="Thaseen75/Tourism_Package_Prediction", 
+        filename="Tourism_Package_Prediction_Model_v1.joblib"
+    )
+    return joblib.load(model_path)
 
 model = load_model()
 
