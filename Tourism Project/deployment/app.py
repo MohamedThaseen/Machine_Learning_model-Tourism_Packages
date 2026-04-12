@@ -67,9 +67,7 @@ if st.button("🔮 Predict"):
     probabilities = model.predict_proba(input_data)
     proba = probabilities[0][1] 
     threshold = 0.45
-    final_prediction = 1 if proba >= threshold else 0
-    result = "take the tourism package" if final_prediction == 1 else "NOT take the tourism package"
-    st.info(f"The model has predicted that the customer will {result}")
+    Prediction = 1 if proba >= threshold else 0
     result = "Customer Will take the tourism package" if Prediction == 1 else "Customer Will not take the tourism package"
     st.info(f"The model has predicted that {result}")
-    st.info(f"Predicted :{Prediction:.2f} ")
+    st.info(f"Probability Score: {proba:.2f}")
