@@ -1,3 +1,4 @@
+%%writefile "Tourism Project/Model_building/prep.py"
 # for data manipulation
 import pandas as pd
 import sklearn
@@ -14,8 +15,11 @@ DATASET_PATH = "hf://datasets/Thaseen75/Tourism_Package_Prediction/tourism.csv"
 df = pd.read_csv(DATASET_PATH)
 print("Dataset loaded successfully.")
 
+df['Gender'] = df['Gender'].replace('Fe Male', 'Female')
+df['MaritalStatus'] = df['MaritalStatus'].replace('Unmarried', 'Single')
+
 # Drop the unique identifier
-df.drop(columns=["Unnamed: 0",'CustomerID'], inplace=True)
+df.drop(columns=["Unnamed: 0",'CustomerID', 'CityTier'], inplace=True)
 
 target_col = 'ProdTaken'
 
