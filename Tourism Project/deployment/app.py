@@ -63,6 +63,18 @@ input_data = pd.DataFrame([{
 
     }])
 
+# 1. This list MUST match the order of numeric_features + categorical_features in train.py
+correct_order = [
+    'Age', 'CityTier', 'DurationOfPitch', 'NumberOfPersonVisiting',
+    'NumberOfFollowups', 'PreferredPropertyStar', 'NumberOfTrips', 'Passport',
+    'PitchSatisfactionScore', 'OwnCar', 'NumberOfChildrenVisiting', 'MonthlyIncome',
+    'TypeofContact', 'Occupation', 'Gender', 'ProductPitched',
+    'MaritalStatus', 'Designation'
+]
+
+# 2. Re-order the DataFrame
+input_data = input_data[correct_order]
+
 if st.button("🔮 Predict"):
     probabilities = model.predict_proba(input_data)
     proba = probabilities[0][1] 
