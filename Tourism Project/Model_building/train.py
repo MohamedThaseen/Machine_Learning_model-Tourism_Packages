@@ -152,7 +152,7 @@ except Exception:
     # Use the string token here
     create_repo(
     repo_id=repo_id,
-    repo_type="space",
+    repo_type=repo_type,
     space_sdk="streamlit",  # <--- Add this line
     token=os.getenv("HF_TOURISM_PACKAGE_PREDICTION_TOKEN"), # Use the env variable directly
     private=False
