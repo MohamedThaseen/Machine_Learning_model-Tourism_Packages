@@ -150,11 +150,13 @@ try:
 except Exception:
     print(f"Repo '{repo_id}' not found. Creating it...")
     # Use the string token here
-    api.create_repo(
-        repo_id=repo_id, 
-        repo_type=repo_type, 
-        private=False
-    )
+    create_repo(
+    repo_id=repo_id,
+    repo_type="space",
+    space_sdk="streamlit",  # <--- Add this line
+    token=os.getenv("HF_TOURISM_PACKAGE_PREDICTION_TOKEN"), # Use the env variable directly
+    private=False
+)
 
 # The api object already has the token, so you don't need to pass it again here
 api.upload_file(
