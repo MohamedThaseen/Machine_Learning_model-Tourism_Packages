@@ -143,23 +143,23 @@ with mlflow.start_run():
     repo_type = "model"
 
     # Step 1: Check if the space exists
-    try:
-     api.repo_info(repo_id=repo_id, repo_type=repo_type)
-     print(f"Repo '{repo_id}' already exists.")
-    except Exception:
-     print(f"Repo '{repo_id}' not found. Creating it...")
-    # PASS THE TOKEN EXPLICITLY HERE
-     create_repo(
+try:
+    # Check if exists
+    api.repo_info(repo_id=repo_id, repo_type=repo_type)
+    print(f"Repo '{repo_id}' already exists.")
+except Exception:
+    print(f"Repo '{repo_id}' not found. Creating it...")
+    # Use the string token here
+    api.create_repo(
         repo_id=repo_id, 
         repo_type=repo_type, 
-        token = api,    # <--- This ensures the token is used for creation
         private=False
     )
 
-    # create_repo("churn-model", repo_type="model", private=False)
-    api.upload_file(
-        path_or_fileobj="Tourism_Package_Prediction_Model_v1.joblib",
-        path_in_repo="Tourism_Package_Prediction_Model_v1.joblib",
-        repo_id=repo_id,
-        repo_type=repo_type,
-    )
+# The api object already has the token, so you don't need to pass it again here
+api.upload_file(
+    path_or_fileobj=model_path,
+    path_in_repo=model_path,
+    repo_id=repo_id,
+    repo_type=repo_type,
+)
