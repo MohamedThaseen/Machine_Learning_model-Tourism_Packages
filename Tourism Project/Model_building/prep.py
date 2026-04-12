@@ -1,4 +1,3 @@
-%%writefile "Tourism Project/Model_building/prep.py"
 # for data manipulation
 import pandas as pd
 import sklearn
