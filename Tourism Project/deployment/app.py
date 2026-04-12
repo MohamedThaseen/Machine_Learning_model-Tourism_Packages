@@ -42,24 +42,24 @@ NumberOfFollowups = st.number_input("Number Of Followups(Min = 1.5, Max = 5.5)",
 
 input_data = pd.DataFrame([{
 
+        'Age' : Age,
         'TypeofContact' : TypeofContact,
+        'CityTier' : CityTier,
+        'DurationOfPitch' : DurationOfPitch,
         'Occupation' : Occupation,
         'Gender' : Gender,
-        'ProductPitched' : ProductPitched,
-        'MaritalStatus' : MaritalStatus,
-        'Designation' : Designation,
-        'CityTier' : CityTier,
-        'Passport' : Passport,
-        'OwnCar' : OwnCar,
-        'Age' : Age,
-        'DurationOfPitch' : DurationOfPitch,
         'NumberOfPersonVisiting' : NumberOfPersonVisiting,
+        'NumberOfFollowups' : NumberOfFollowups,
+        'ProductPitched' : ProductPitched,
         'PreferredPropertyStar' : PreferredPropertyStar,
+        'MaritalStatus' : MaritalStatus,
         'NumberOfTrips' : NumberOfTrips,
+        'Passport' : Passport,
         'PitchSatisfactionScore' : PitchSatisfactionScore,
+        'OwnCar' : OwnCar,
         'NumberOfChildrenVisiting' : NumberOfChildrenVisiting,
-        'MonthlyIncome' : MonthlyIncome,
-        'NumberOfFollowups' : NumberOfFollowups
+        'Designation' : Designation,
+        'MonthlyIncome' : MonthlyIncome
 
     }])
 
