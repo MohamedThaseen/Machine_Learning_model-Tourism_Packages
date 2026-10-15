@@ -1,4 +1,4 @@
-# Visit with Us: Wellness Tourism Package Prediction (MLOps Pipeline)
+# Wellness Tourism Package Prediction (MLOps Pipeline)
 
 An end-to-end MLOps project for **"Visit with Us"**, a travel company launching a new **Wellness Tourism Package**. It predicts whether a customer will purchase the package *before* they are contacted, and automates the workflow (data registration, preparation, training, deployment) with **GitHub Actions** CI/CD, **MLflow** experiment tracking and **Hugging Face** hosting.
 
